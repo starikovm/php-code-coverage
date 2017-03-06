@@ -134,13 +134,14 @@ class CodeCoverage
      *
      * @param Driver $driver
      * @param Filter $filter
+     * @param bool   $branchCoverage
      *
      * @throws RuntimeException
      */
-    public function __construct(Driver $driver = null, Filter $filter = null)
+    public function __construct(Driver $driver = null, Filter $filter = null, $branchCoverage = false)
     {
         if ($driver === null) {
-            $driver = $this->selectDriver();
+            $driver = $this->selectDriver($branchCoverage);
         }
 
         if ($filter === null) {
@@ -1020,11 +1021,13 @@ class CodeCoverage
     }
 
     /**
+     * @param bool $branchCoverage
+     *
      * @return Driver
      *
      * @throws RuntimeException
      */
-    private function selectDriver()
+    private function selectDriver($branchCoverage = false)
     {
         $runtime = new Runtime;
 
@@ -1037,7 +1040,7 @@ class CodeCoverage
         } elseif ($runtime->isPHPDBG()) {
             return new PHPDBG;
         } else {
-            return new Xdebug;
+            return new Xdebug($branchCoverage);
         }
     }
 

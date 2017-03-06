@@ -10,6 +10,7 @@
 
 namespace SebastianBergmann\CodeCoverage\Driver;
 
+use SebastianBergmann\CodeCoverage\InvalidArgumentException;
 use SebastianBergmann\CodeCoverage\RuntimeException;
 
 /**
@@ -27,9 +28,17 @@ class Xdebug implements Driver
     private $cacheNumLines = [];
 
     /**
+     * @var bool
+     */
+    private $branchCoverage = false;
+
+    /**
+     * @param bool $branchCoverage
+     *
+     * @throws InvalidArgumentException
      * @throws RuntimeException
      */
-    public function __construct()
+    public function __construct($branchCoverage = false)
     {
         if (!extension_loaded('xdebug')) {
             throw new RuntimeException('This driver requires Xdebug');
@@ -38,6 +47,16 @@ class Xdebug implements Driver
         if (version_compare(phpversion('xdebug'), '2.2.1', '>=') && !ini_get('xdebug.coverage_enable')) {
             throw new RuntimeException('xdebug.coverage_enable=On has to be set in php.ini');
         }
+
+        if (!is_bool($branchCoverage)) {
+            throw InvalidArgumentException::create(1, 'boolean');
+        }
+
+        if ($branchCoverage && !defined('XDEBUG_CC_BRANCH_CHECK')) {
+            throw new RuntimeException('Xdebug 2.3 is required for branch coverage');
+        }
+
+        $this->branchCoverage = $branchCoverage;
     }
 
     /**
@@ -46,6 +65,10 @@ class Xdebug implements Driver
     public function start()
     {
         $options = XDEBUG_CC_DEAD_CODE | XDEBUG_CC_UNUSED;
+
+        if ($this->branchCoverage) {
+            $options |= XDEBUG_CC_BRANCH_CHECK;
+        }
 
         xdebug_start_code_coverage($options);
     }
