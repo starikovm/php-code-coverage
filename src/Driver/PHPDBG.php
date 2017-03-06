@@ -39,10 +39,8 @@ class PHPDBG implements Driver
 
     /**
      * Start collection of code coverage information.
-     *
-     * @param bool $determineUnusedAndDead
      */
-    public function start($determineUnusedAndDead = true)
+    public function start()
     {
         phpdbg_start_oplog();
     }

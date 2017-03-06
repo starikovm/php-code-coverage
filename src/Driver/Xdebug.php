@@ -27,7 +27,7 @@ class Xdebug implements Driver
     private $cacheNumLines = [];
 
     /**
-     * Constructor.
+     * @throws RuntimeException
      */
     public function __construct()
     {
@@ -35,27 +35,17 @@ class Xdebug implements Driver
             throw new RuntimeException('This driver requires Xdebug');
         }
 
-        if (version_compare(phpversion('xdebug'), '2.2.1', '>=') &&
-            !ini_get('xdebug.coverage_enable')) {
-            throw new RuntimeException(
-                'xdebug.coverage_enable=On has to be set in php.ini'
-            );
+        if (version_compare(phpversion('xdebug'), '2.2.1', '>=') && !ini_get('xdebug.coverage_enable')) {
+            throw new RuntimeException('xdebug.coverage_enable=On has to be set in php.ini');
         }
     }
 
     /**
      * Start collection of code coverage information.
-     *
-     * @param bool $determineUnusedAndDead
      */
-    public function start($determineUnusedAndDead = true)
+    public function start()
     {
-        $options = 0;
-
-        if ($determineUnusedAndDead) {
-            $options |= XDEBUG_CC_UNUSED;
-            $options |= XDEBUG_CC_DEAD_CODE;
-        }
+        $options = XDEBUG_CC_DEAD_CODE | XDEBUG_CC_UNUSED;
 
         xdebug_start_code_coverage($options);
     }
