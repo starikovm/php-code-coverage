@@ -50,11 +50,14 @@ class Xdebug implements Driver
      */
     public function start($determineUnusedAndDead = true)
     {
+        $options = 0;
+
         if ($determineUnusedAndDead) {
-            xdebug_start_code_coverage(XDEBUG_CC_UNUSED | XDEBUG_CC_DEAD_CODE);
-        } else {
-            xdebug_start_code_coverage();
+            $options |= XDEBUG_CC_UNUSED;
+            $options |= XDEBUG_CC_DEAD_CODE;
         }
+
+        xdebug_start_code_coverage($options);
     }
 
     /**
