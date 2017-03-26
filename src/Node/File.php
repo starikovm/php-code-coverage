@@ -431,7 +431,7 @@ class File extends AbstractNode
                 }
             }
 
-            if (isset($this->coverageData[$lineNumber])) {
+            if (isset($this->coverageData['lines'][$lineNumber])) {
                 if (isset($currentClass)) {
                     $currentClass['executableLines']++;
                 }
@@ -450,7 +450,7 @@ class File extends AbstractNode
 
                 $this->numExecutableLines++;
 
-                if (count($this->coverageData[$lineNumber]) > 0) {
+                if (count($this->coverageData['lines'][$lineNumber]) > 0) {
                     if (isset($currentClass)) {
                         $currentClass['executedLines']++;
                     }

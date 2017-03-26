@@ -58,7 +58,7 @@ class Clover
             $xmlFile->setAttribute('name', $item->getPath());
 
             $classes   = $item->getClassesAndTraits();
-            $coverage  = $item->getCoverageData();
+            $coverage  = $item->getCoverageData()['lines'];
             $lines     = [];
             $namespace = 'global';
 

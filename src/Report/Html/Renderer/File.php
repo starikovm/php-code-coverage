@@ -292,7 +292,7 @@ class File extends Renderer
      */
     protected function renderSource(FileNode $node)
     {
-        $coverageData = $node->getCoverageData();
+        $coverageData = $node->getCoverageData()['lines'];
         $testData     = $node->getTestData();
         $codeLines    = $this->loadFile($node->getPath());
         $lines        = '';

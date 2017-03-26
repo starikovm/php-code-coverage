@@ -94,14 +94,39 @@ class Xdebug implements Driver
     private function cleanup(array $data)
     {
         foreach (array_keys($data) as $file) {
-            unset($data[$file][0]);
+            if (!$this->branchCoverage) {
+                $data[$file]['lines']     = [];
+                $data[$file]['functions'] = [];
+
+                foreach (array_keys($data[$file]) as $line) {
+                    if (!is_int($line)) {
+                        continue;
+                    }
+
+                    $data[$file]['lines'][$line] = $data[$file][$line];
+
+                    unset($data[$file][$line]);
+                }
+            }
+
+            unset($data[$file]['lines'][0]);
 
             if (strpos($file, 'xdebug://debug-eval') !== 0 && file_exists($file)) {
                 $numLines = $this->getNumberOfLinesInFile($file);
 
-                foreach (array_keys($data[$file]) as $line) {
+                if (!isset($data[$file]['lines'])) {
+                    // TODO: Figure out why how this can happen
+                    $data[$file]['lines'] = [];
+                }
+
+                if (!isset($data[$file]['functions'])) {
+                    // TODO: Figure out why how this can happen
+                    $data[$file]['functions'] = [];
+                }
+
+                foreach (array_keys($data[$file]['lines']) as $line) {
                     if ($line > $numLines) {
-                        unset($data[$file][$line]);
+                        unset($data[$file]['lines'][$line]);
                     }
                 }
             }

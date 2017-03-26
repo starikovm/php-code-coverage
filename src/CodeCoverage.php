@@ -363,15 +363,15 @@ class CodeCoverage
 
         $this->tests[$id] = ['size' => $size, 'status' => $status];
 
-        foreach ($data as $file => $lines) {
+        foreach ($data as $file => $fileCoverage) {
             if (!$this->filter->isFile($file)) {
                 continue;
             }
 
-            foreach ($lines as $k => $v) {
+            foreach ($fileCoverage['lines'] as $k => $v) {
                 if ($v == Driver::LINE_EXECUTED) {
-                    if (empty($this->data[$file][$k]) || !in_array($id, $this->data[$file][$k])) {
-                        $this->data[$file][$k][] = $id;
+                    if (empty($this->data[$file]['lines'][$k]) || !in_array($id, $this->data[$file]['lines'][$k])) {
+                        $this->data[$file]['lines'][$k][] = $id;
                     }
                 }
             }
@@ -389,22 +389,22 @@ class CodeCoverage
             array_merge($this->filter->getWhitelistedFiles(), $that->filter()->getWhitelistedFiles())
         );
 
-        foreach ($that->data as $file => $lines) {
+        foreach ($that->data as $file => $fileCoverage) {
             if (!isset($this->data[$file])) {
                 if (!$this->filter->isFiltered($file)) {
-                    $this->data[$file] = $lines;
+                    $this->data[$file] = $fileCoverage;
                 }
 
                 continue;
             }
 
-            foreach ($lines as $line => $data) {
+            foreach ($fileCoverage['lines'] as $line => $data) {
                 if ($data !== null) {
-                    if (!isset($this->data[$file][$line])) {
-                        $this->data[$file][$line] = $data;
+                    if (!isset($this->data[$file]['lines'][$line])) {
+                        $this->data[$file]['lines'][$line] = $data;
                     } else {
-                        $this->data[$file][$line] = array_unique(
-                            array_merge($this->data[$file][$line], $data)
+                        $this->data[$file]['lines'][$line] = array_unique(
+                            array_merge($this->data[$file]['lines'][$line], $data)
                         );
                     }
                 }
@@ -640,8 +640,8 @@ class CodeCoverage
         foreach (array_keys($data) as $filename) {
             $_linesToBeCovered = array_flip($linesToBeCovered[$filename]);
 
-            $data[$filename] = array_intersect_key(
-                $data[$filename],
+            $data[$filename]['lines'] = array_intersect_key(
+                $data[$filename]['lines'],
                 $_linesToBeCovered
             );
         }
@@ -674,7 +674,7 @@ class CodeCoverage
             }
 
             foreach ($this->getLinesToBeIgnored($filename) as $line) {
-                unset($data[$filename][$line]);
+                unset($data[$filename]['lines'][$line]);
             }
         }
     }
@@ -684,12 +684,12 @@ class CodeCoverage
      */
     private function initializeFilesThatAreSeenTheFirstTime(array $data)
     {
-        foreach ($data as $file => $lines) {
+        foreach ($data as $file => $fileCoverage) {
             if ($this->filter->isFile($file) && !isset($this->data[$file])) {
-                $this->data[$file] = [];
+                $this->data[$file] = ['lines' => [], 'functions' => $fileCoverage['functions']];
 
-                foreach ($lines as $k => $v) {
-                    $this->data[$file][$k] = $v == -2 ? null : [];
+                foreach ($fileCoverage['lines'] as $k => $v) {
+                    $this->data[$file]['lines'][$k] = $v == -2 ? null : [];
                 }
             }
         }
@@ -922,7 +922,7 @@ class CodeCoverage
         $unintentionallyCoveredUnits = [];
 
         foreach ($data as $file => $_data) {
-            foreach ($_data as $line => $flag) {
+            foreach ($_data['lines'] as $line => $flag) {
                 if ($flag == 1 && !isset($allowedLines[$file][$line])) {
                     $unintentionallyCoveredUnits[] = $this->wizard->lookup($file, $line);
                 }
@@ -953,7 +953,7 @@ class CodeCoverage
         );
 
         foreach ($data as $file => $_data) {
-            foreach (array_keys($_data) as $line) {
+            foreach (array_keys($_data['lines']) as $line) {
                 if (!isset($expectedLines[$file][$line])) {
                     continue;
                 }
@@ -1101,9 +1101,9 @@ class CodeCoverage
                     continue;
                 }
 
-                foreach (array_keys($fileCoverage) as $key) {
-                    if ($fileCoverage[$key] == Driver::LINE_EXECUTED) {
-                        $fileCoverage[$key] = Driver::LINE_NOT_EXECUTED;
+                foreach (array_keys($fileCoverage['lines']) as $line) {
+                    if ($fileCoverage['lines'][$line] == Driver::LINE_EXECUTED) {
+                        $fileCoverage['lines'][$line] = Driver::LINE_NOT_EXECUTED;
                     }
                 }
 
