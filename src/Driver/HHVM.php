@@ -26,4 +26,12 @@ class HHVM extends Xdebug
     {
         xdebug_start_code_coverage();
     }
+
+    /**
+     * @return bool
+     */
+    public function supportsWhitelistFiltering()
+    {
+        return false;
+    }
 }

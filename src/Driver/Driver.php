@@ -49,4 +49,9 @@ interface Driver
      * @return array
      */
     public function stop();
+
+    /**
+     * @return bool
+     */
+    public function supportsWhitelistFiltering();
 }

@@ -330,7 +330,10 @@ class CodeCoverage
             throw new RuntimeException;
         }
 
-        $this->applyListsFilter($data);
+        if (!$this->driver->supportsWhitelistFiltering()) {
+            $this->applyWhitelist($data);
+        }
+
         $this->applyIgnoredLinesFilter($data);
         $this->initializeFilesThatAreSeenTheFirstTime($data);
 
@@ -661,11 +664,9 @@ class CodeCoverage
     }
 
     /**
-     * Applies the whitelist filtering.
-     *
      * @param array $data
      */
-    private function applyListsFilter(array &$data)
+    private function applyWhitelist(array &$data)
     {
         foreach (array_keys($data) as $filename) {
             if ($this->filter->isFiltered($filename)) {

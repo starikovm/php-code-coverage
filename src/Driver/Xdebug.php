@@ -71,6 +71,14 @@ class Xdebug implements Driver
     }
 
     /**
+     * @return bool
+     */
+    public function supportsWhitelistFiltering()
+    {
+        return false;
+    }
+
+    /**
      * @param array $data
      *
      * @return array
