@@ -19,7 +19,9 @@ class BankAccount
 
     public function depositMoney($balance)
     {
-        $this->setBalance($this->getBalance() + $balance);
+        require_once TEST_FILES_PATH . '/CalculatorSum.php';
+        $calculator = new CalculatorSum($this->getBalance(), $balance);
+        $this->setBalance($calculator->add());
 
         return $this->getBalance();
     }

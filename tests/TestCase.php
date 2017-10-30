@@ -38,12 +38,12 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
                     15 => -1,
                     16 => -1,
                     18 => -1,
-                    22 => -1,
                     24 => -1,
-                    25 => -2,
-                    29 => -1,
+                    26 => -1,
+                    27 => -2,
                     31 => -1,
-                    32 => -2
+                    33 => -1,
+                    34 => -2
                 ]
             ],
             [
@@ -51,7 +51,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
                     8  => 1,
                     13 => 1,
                     16 => 1,
-                    29 => 1,
+                    31 => 1,
                 ]
             ],
             [
@@ -59,7 +59,12 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
                     8  => 1,
                     13 => 1,
                     16 => 1,
-                    22 => 1,
+                    24 => 1,
+                ],
+                TEST_FILES_PATH . 'CalculatorSum.php' => [
+                    10 => 1,
+                    11 => 1,
+                    22 => 1
                 ]
             ],
             [
@@ -69,13 +74,96 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
                     14 => 1,
                     15 => 1,
                     18 => 1,
-                    22 => 1,
                     24 => 1,
-                    29 => 1,
+                    26 => 1,
                     31 => 1,
+                    33 => 1,
+                ],
+                TEST_FILES_PATH . 'CalculatorSum.php' => [
+                    10 => 1,
+                    11 => 1,
+                    22 => 1
                 ]
             ]
         ];
+    }
+
+    protected function getStrictCoverageForBankAccount()
+    {
+        $data = $this->getXdebugDataForBankAccount();
+        require_once TEST_FILES_PATH . '/BankAccountTest.php';
+        require_once TEST_FILES_PATH . '/CalculatorSum.php';
+
+        $stub = $this->createMock(Xdebug::class);
+
+        $stub->expects($this->any())
+            ->method('stop')
+            ->will($this->onConsecutiveCalls(
+                $data[0],
+                $data[1],
+                $data[2],
+                $data[3]
+            ));
+
+        $filter = new Filter;
+        $filter->addFileToWhitelist(TEST_FILES_PATH . 'BankAccount.php');
+        $filter->addFileToWhitelist(TEST_FILES_PATH . 'CalculatorSum.php');
+
+        $coverage = new CodeCoverage($stub, $filter);
+        $coverage->setCheckForUnintentionallyCoveredCode(true);
+        $coverage->setCheckForMissingCoversAnnotation(true);
+        $coverage->setCheckForMissingUsesAnnotation(false);
+
+        $coverage->start(
+            new \BankAccountTest('testBalanceIsInitiallyZero'),
+            true
+        );
+
+        $coverage->stop(
+            true,
+            [TEST_FILES_PATH . 'BankAccount.php' => range(6, 9)]
+        );
+
+        $coverage->start(
+            new \BankAccountTest('testBalanceCannotBecomeNegative')
+        );
+
+        $coverage->stop(
+            true,
+            [
+                TEST_FILES_PATH . 'BankAccount.php' => array_merge(
+                    range(6, 9),
+                    range(11, 18),
+                    range(29, 34)
+                )
+            ]
+        );
+
+        $coverage->start(
+            new \BankAccountTest('testBalanceCannotBecomeNegative2')
+        );
+
+        $coverage->stop(
+            true,
+            [TEST_FILES_PATH . 'BankAccount.php' => range(20, 27)]
+        );
+
+        $coverage->start(
+            new \BankAccountTest('testDepositWithdrawMoney')
+        );
+
+        $coverage->stop(
+            true,
+            [
+                TEST_FILES_PATH . 'BankAccount.php' => array_merge(
+                    range(6, 9),
+                    range(20, 27),
+                    range(29, 34)
+                )
+            ]
+        );
+
+        return $coverage;
     }
 
     protected function getCoverageForBankAccount()
@@ -96,6 +184,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
 
         $filter = new Filter;
         $filter->addFileToWhitelist(TEST_FILES_PATH . 'BankAccount.php');
+        $filter->addFileToWhitelist(TEST_FILES_PATH . 'CalculatorSum.php');
 
         $coverage = new CodeCoverage($stub, $filter);
 

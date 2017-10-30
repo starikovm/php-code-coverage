@@ -303,6 +303,11 @@ class CodeCoverageTest extends TestCase
         );
     }
 
+    public function testStrictCoverage()
+    {
+        $coverage = $this->getStrictCoverageForBankAccount();
+    }
+
     public function testMerge()
     {
         $coverage = $this->getCoverageForBankAccountForFirstTwoTests();

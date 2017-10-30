@@ -69,6 +69,11 @@ class CodeCoverage
     /**
      * @var bool
      */
+    private $checkForMissingUsesAnnotation = false;
+
+    /**
+     * @var bool
+     */
     private $addUncoveredFilesFromWhitelist = true;
 
     /**
@@ -339,7 +344,7 @@ class CodeCoverage
         }
 
         if ($id != 'UNCOVERED_FILES_FROM_WHITELIST') {
-            $this->applyCoversAnnotationFilter(
+            $this->applyAnnotationFilter(
                 $data,
                 $linesToBeCovered,
                 $linesToBeUsed
@@ -508,6 +513,23 @@ class CodeCoverage
      *
      * @throws InvalidArgumentException
      */
+    public function setCheckForMissingUsesAnnotation($flag)
+    {
+        if (!is_bool($flag)) {
+            throw InvalidArgumentException::create(
+                1,
+                'boolean'
+            );
+        }
+
+        $this->checkForMissingUsesAnnotation = $flag;
+    }
+
+    /**
+     * @param bool $flag
+     *
+     * @throws InvalidArgumentException
+     */
     public function setCheckForUnexecutedCoveredCode($flag)
     {
         if (!is_bool($flag)) {
@@ -617,7 +639,7 @@ class CodeCoverage
      * @throws MissingCoversAnnotationException
      * @throws UnintentionallyCoveredCodeException
      */
-    private function applyCoversAnnotationFilter(array &$data, $linesToBeCovered, array $linesToBeUsed)
+    private function applyAnnotationFilter(array &$data, $linesToBeCovered, array $linesToBeUsed)
     {
         if ($linesToBeCovered === false ||
             ($this->forceCoversAnnotation && empty($linesToBeCovered))) {
@@ -627,10 +649,6 @@ class CodeCoverage
 
             $data = [];
 
-            return;
-        }
-
-        if (empty($linesToBeCovered)) {
             return;
         }
 
@@ -932,6 +950,17 @@ class CodeCoverage
             $linesToBeUsed
         );
 
+        $allowedCoveredFilesOrClasses = $this->getAllowedFilesOrClasses(
+            $linesToBeCovered
+        );
+
+        $allowedClasses = [];
+        foreach ($allowedCoveredFilesOrClasses as $coveredClassOrFile) {
+            if (is_file($coveredClassOrFile)) continue;
+
+            $allowedClasses[] = $coveredClassOrFile;
+        }
+
         $unintentionallyCoveredUnits = [];
 
         foreach ($data as $file => $_data) {
@@ -942,7 +971,7 @@ class CodeCoverage
             }
         }
 
-        $unintentionallyCoveredUnits = $this->processUnintentionallyCoveredUnits($unintentionallyCoveredUnits);
+        $unintentionallyCoveredUnits = $this->processUnintentionallyCoveredUnits($unintentionallyCoveredUnits, $allowedClasses);
 
         if (!empty($unintentionallyCoveredUnits)) {
             throw new UnintentionallyCoveredCodeException(
@@ -1028,6 +1057,22 @@ class CodeCoverage
     }
 
     /**
+     * @param array $linesToBeCovered
+     *
+     * @return array
+     */
+    private function getAllowedFilesOrClasses(array $linesToBeCovered)
+    {
+        $allowedFilesOrClasses = [];
+
+        foreach (array_keys($linesToBeCovered) as $fullFilePath) {
+            $allowedFilesOrClasses[] = $this->wizard->lookupClass($fullFilePath);
+        }
+
+        return array_unique($allowedFilesOrClasses);
+    }
+
+    /**
      * @return Driver
      *
      * @throws RuntimeException
@@ -1051,10 +1096,11 @@ class CodeCoverage
 
     /**
      * @param array $unintentionallyCoveredUnits
+     * @param array $allowedCoveredClasses
      *
      * @return array
      */
-    private function processUnintentionallyCoveredUnits(array $unintentionallyCoveredUnits)
+    private function processUnintentionallyCoveredUnits(array $unintentionallyCoveredUnits, array $allowedCoveredClasses = [])
     {
         $unintentionallyCoveredUnits = array_unique($unintentionallyCoveredUnits);
         sort($unintentionallyCoveredUnits);
@@ -1063,6 +1109,18 @@ class CodeCoverage
             $unit = explode('::', $unintentionallyCoveredUnits[$k]);
 
             if (count($unit) != 2) {
+                continue;
+            }
+
+            if (!$this->checkForMissingUsesAnnotation && !in_array($unit[0], $allowedCoveredClasses))
+            {
+                unset($unintentionallyCoveredUnits[$k]);
+                continue;
+            }
+
+            if (!$this->checkForMissingCoversAnnotation && in_array($unit[0], $allowedCoveredClasses))
+            {
+                unset($unintentionallyCoveredUnits[$k]);
                 continue;
             }
 
